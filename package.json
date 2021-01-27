@@ -1,5 +1,5 @@
 {
-    "name": "jayganticbot",
+    "name": "jerryecho",
     "version": "1.0.0",
     "description": "testing",
     "main": "bot.js",
@@ -9,7 +9,10 @@
         "discord.js": "^12.5.1",
         "dotenv": "^8.2.0",
         "ffmpeg-static": "^4.2.7",
+        "node-persist": "^3.1.0",
+        "nodemon": "^2.0.7",
         "opusscript": "^0.0.7",
-        "say": "^0.16.0"
+        "say": "^0.16.0",
+        "ytdl-core": "^4.4.5"
     }
 }

@@ -1,6 +1,8 @@
 auth.json
 google_application_credentials.json
 .env
+start.sh
+stop.sh
 
 say_in_vc_files/
 
@@ -119,4 +121,4 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
-.pnp.*
+.pnp

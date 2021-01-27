@@ -1,25 +1,45 @@
+// Requires
 const Discord = require('discord.js');
 const TTS = require('@google-cloud/text-to-speech');
 const fs = require('fs');
 const util = require('util');
+const ytdl = require('ytdl-core');
 require('dotenv').config();
-
-const discordAuth = require(process.env.DISCORD_CREDENTIALS);
 
 const comnmandPrefix = '/';
 const sayInVCAudioPath = 'say_in_vc_files';
 const vcTimeoutDuration = 60000;
+
+// Message and embed constants
+const checkDMsMessage = '***check your DMs.***'
+const errorMessage = '***something went wrong. Please try again.***'
+const joinVCMessage = '***please join a voice channel and try again.***'
+const noQuotesMessage = '***no quotes were found in #quotes.***'
+const waitSpeakingMessage = '***please wait until I\'m done speaking.***'
+
+const helpEmbed = new Discord.MessageEmbed()
+    .setTitle('Bot Commands')
+    .setDescription('')
+    .setColor(0xff0000)
+    .addFields(
+        { name: '`/help` or `/?`', value: 'Sends a DM to caller with information about this bot\'s commands.' },
+        { name: '`/say <text>` or `/s`', value: 'Speaks text in the voice channel the caller is in.' },
+        { name: '`/sayquote` or `/sq`', value: 'Randomly draw a quote from the most recent 100 messages in **#quotes**, then speaks it in voice channel the caller is in.' }
+    )
+    .setFooter('Bot by Jaygantic#2171', 'https://avatars2.githubusercontent.com/u/42555186?s=460&v=4');
+
+// vars for bot
 var vcDisconnectTimer;
 
-const say = require('say')
+// const say = require('say')
 
 // Create clients
 const discordClient = new Discord.Client({
     presence: {
         status: 'online',
         activity: {
-            name: 'over this server',
-            type: 'WATCHING'
+            name: 'to your commands',
+            type: 'LISTENING'
         }
     }
 });
@@ -34,23 +54,14 @@ discordClient.on('ready', function() {
 
 });
 
-// Repost messages on deletion
-// discordClient.on('messageDelete', function(message) {
-//     var authorName = message.author.username;
-//     var content = message.content;
-//     var channel = message.channel;
-//     channel.send(authorName + ' said "' + content + '"')
-// });
+// Greetings
+discordClient.on('guildMemberAdd', guildMember => {
+    const generalChannel = message.guild.channels.cache.find(ch => ch.name === 'general');
+    if (generalChannel)
+        generalChannel.send(`Welcome to the server, ${member}`);
+});
 
-// Repost messages on edit
-// discordClient.on('messageUpdate', function(oldMessage, newMessage) {
-//     var authorName = oldMessage.author.username;
-//     var content = oldMessage.content;
-//     var channel = oldMessage.channel;
-//     channel.send(authorName + ' once said "' + content + '"');
-// });
-
-// Command system
+// Commands system
 discordClient.on('message', async message => {
 
     // Ignore if message is a DM
@@ -73,59 +84,94 @@ discordClient.on('message', async message => {
             trimmedContent.substring(indexOfNextSpace + 1, trimmedContent.length)
         ];
 
-        console.log(command)
+        console.log(command);
 
         switch (command[0]) {
 
-            // Speak a random quote from #quotes in voice channel of caller.
-            // Syntax: /sayquote
+            // Sends a DM to caller with information about this bot's commands.
+            // Syntax: /help or /?
+            case 'help': 
+            case '?':
+
+                try {
+                    var DMChannel = await message.author.createDM();
+                    await DMChannel.send(helpEmbed);
+                    await message.reply(checkDMsMessage);
+                }
+                catch (err) {
+                    console.log(err)
+                    message.reply(errorMessage);
+                }
+                break;
+
+            // Randomly draw a quote from the most recent 100 messages in #quotes, then speaks it in voice channel the caller is in.
+            // Syntax: /sayquote or /sq
             case 'sayquote': 
+            case 'sq':
 
                 // Get quotes channel
                 var quotesChannel = message.guild.channels.cache.find(ch => ch.name === 'quotes');
 
                 // Ignore if quotes channel DNE or is not text-based
                 if (!quotesChannel || !quotesChannel.isText()) {
-                    message.reply('a quotes channel was not found on this server.')
+                    await message.reply(noQuotesMessage);
                     return;
                 }
 
+                // Get quotes from channel
                 var quotes = await quotesChannel.messages.fetch({limit: 100});
+
+                // Ignore if quotes channel is empty
+                if (quotes.size == 0) {
+                    await message.reply(noQuotesMessage);
+                    return;
+                }
                 var quotesKey = quotes.randomKey(1);
                 command[1] = quotes.get(quotesKey[0]).content;
 
-            // Speak message in voice channel of caller.
-            // Syntax: /say <message>
+                // Fall through to say
+
+            // Speaks text in the voice channel the caller is in.
+            // Syntax: /say <text> or /s
             case 'say':
+            case 's':
 
-                console.log(command[1]);
+                // Check if caller is in a voice channel
+                if (message.member.voice && message.member.voice.channel) {
 
-                // Check if caller is in voice channel
-                var channel = message.member.voice.channel;
-                if (channel) {
+                    const callerVoiceChannel = message.member.voice.channel;
 
-                    //Join voice channel
-                    const connection = await channel.join();
+                    try {                      
 
-                    // If currently talking, ignore
-                    if (connection.dispatcher) {
-                        message.reply('please wait until I\'m done speaking.');
-                        return;
-                    }
+                        // Check if bot is in a voice channel
+                        if (message.guild.voice && message.guild.voice.channel) {
+                            
+                            const botVoiceState = message.guild.voice;
 
-                    //Reset disconnect timer
-                    clearTimeout(vcDisconnectTimer);
+                            // Ignore if bot is currently talking
+                            const botVCConnection = await botVoiceState.channel.join();
+                            if (botVCConnection && botVCConnection.dispatcher) {
+                                message.reply(waitSpeakingMessage);
+                                return; 
+                            }   
+                        }
+                        
+                        // Reset disconnect timer
+                        clearTimeout(vcDisconnectTimer);
 
-                    // Export message to audio file
-                    let audioFilePath = sayInVCAudioPath + '/' + messageID + '.mp3';
+                        // Join caller's voice channel
+                        const callerVCConnection = await callerVoiceChannel.join();
 
-                    const request = {
-                        input: {text: command[1]},
-                        voice: {languageCode: 'en-US', ssmlGender: 'NEUTRAL'},
-                        audioConfig: {audioEncoding: 'MP3'},
-                    };
+                        // Export message to audio file
+                        let audioFilePath = sayInVCAudioPath + '/' + messageID + '.mp3';
+                        console.log('create: ' + audioFilePath);
 
-                    try {
+                        const request = {
+                            input: {text: command[1]},
+                            voice: {languageCode: 'en-US', ssmlGender: 'NEUTRAL'},
+                            audioConfig: {audioEncoding: 'MP3'},
+                        };
+
                         // Performs the text-to-speech request
                         const [response] = await ttsClient.synthesizeSpeech(request)
 
@@ -134,56 +180,77 @@ discordClient.on('message', async message => {
                         await writeFile(audioFilePath, response.audioContent, 'binary');
 
                         // Play the audio file in the voice channel
-                        const dispatcher = connection.play(audioFilePath);
-                        
-                        message.delete();
+                        const dispatcher = callerVCConnection.play(audioFilePath);
 
                         // When finished, clean up and leave voice channel
-                        dispatcher.on('finish', () => {
-
+                        const cleanupFunction = () => {
                             dispatcher.destroy();
-                            fs.unlink(audioFilePath, function (err) {
+                            console.log('delete: ' + audioFilePath);
+                            fs.unlink(audioFilePath, (err) => {
                                 if (err) throw err;
                             });
-                            vcDisconnectTimer = setTimeout(() => {channel.leave()}, vcTimeoutDuration);
+                            vcDisconnectTimer = setTimeout(() => {callerVoiceChannel.leave()}, vcTimeoutDuration);
+                        };
+                        dispatcher.on('finish', cleanupFunction);
 
-                        });
                     }          
                     catch (err) {
-                        console.log('Failed to make TTS request.');
+                        
+                        message.reply(errorMessage);
                         console.log(err)
-                        message.reply('there was an error. Please try again.');
-                    }       
-
-                    // Old code using say.js
-                    
-                    // say.export(command[1], null, 1.0, audioFilePath, (err) => {
-                    //     if (err) throw err;
-
-                    //     // Play the audio file in the voice channel
-                    //     const dispatcher = connection.play(audioFilePath)
-
-                    //     // When finished, clean up and leave voice channel
-                    //     dispatcher.on('finish', () => {
-                    //         dispatcher.destroy();
-                    //         fs.unlink(audioFilePath, function (err) {
-                    //             if (err) throw err;
-                    //         });
-                    //         vcDisconnectTimer = setTimeout(() => {channel.leave()}, vcTimeoutDuration);
-                    //     })
-
-                    // })
-                                    
+                        
+                    }         
                 } 
                 else {
-                    message.reply('please join a voice channel and try again.');
+                    message.reply(joinVCMessage);
                 }
                 break;
                 
+
+            // case 'yt':
+            //     if (message.member.voice && message.member.voice.channel) {
+            //         const callerVoiceChannel = message.member.voice.channel;
+
+            //         // Check if bot is in a voice channel
+            //         const botVoiceState = message.guild.voice;
+            //         if (message.guild.voice && message.guild.voice.channel) {
+                        
+            //             // Ignore if bot is currently talking
+            //             const botVCConnection = await message.guild.voice.channel.join();
+            //             if (botVCConnection && botVCConnection.dispatcher) {
+            //                 message.reply(waitSpeakingMessage);
+            //                 return; 
+            //             }   
+            //         }
+                    
+            //         // Reset disconnect timer
+            //         clearTimeout(vcDisconnectTimer);
+
+            //         // Join caller's voice channel
+            //         const callerVCConnection = await callerVoiceChannel.join();
+            //         callerVCConnection.play(ytdl('https://www.youtube.com/watch?v=wDgQdr8ZkTw', { quality: 'highestaudio' , volume: 0.2}));
+            //     }
+            //     break;
         }
 
     }
 
 });
 
-discordClient.login(discordAuth.token);
+// Repost messages on deletion
+// discordClient.on('messageDelete', function(message) {
+//     var authorName = message.author.username;
+//     var content = message.content;
+//     var channel = message.channel;
+//     channel.send(authorName + ' said "' + content + '"')
+// });
+
+// Repost messages on edit
+// discordClient.on('messageUpdate', function(oldMessage, newMessage) {
+//     var authorName = oldMessage.author.username;
+//     var content = oldMessage.content;
+//     var channel = oldMessage.channel;
+//     channel.send(authorName + ' once said "' + content + '"');
+// });
+
+discordClient.login(require(process.env.DISCORD_CREDENTIALS).token);
