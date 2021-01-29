@@ -3,6 +3,7 @@ google_application_credentials.json
 .env
 start.sh
 stop.sh
+greetingMessages.json
 
 say_in_vc_files/
 
