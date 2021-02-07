@@ -1,0 +1,9 @@
+{
+    "checkDMs": "***check your DMs.***",
+    "generalError": "***something went wrong. Please try again.*** ",
+    "joinVC": "***please join a voice channel and try again.*** ",
+    "noQuotes": "***no quotes were found in #quotes.*** ",
+    "nothingToSay": "***give me something to say.*** \n(If you need help, type `/help` or `/?`.)",
+    "rejectedDM": "***I am not accepting DMs right now. *** \n(If you need help, type `/help` or `/?` in a text channel I am in.)",
+    "waitSpeaking": "***please wait until I'm done speaking.*** "
+}

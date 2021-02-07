@@ -1,11 +1,10 @@
-auth.json
-google_application_credentials.json
 .env
 start.sh
 stop.sh
-greetingMessages.json
+greeting-messages.json
 
-sayInVCFiles/
+temp/
+private/
 
 # Logs
 logs
