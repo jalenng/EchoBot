@@ -5,7 +5,7 @@ start.sh
 stop.sh
 greetingMessages.json
 
-say_in_vc_files/
+sayInVCFiles/
 
 # Logs
 logs

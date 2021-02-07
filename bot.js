@@ -11,6 +11,8 @@ require('dotenv').config();
 const comnmandPrefix = '/';
 const sayInVCAudioPath = 'sayInVCFiles';
 const vcTimeoutDuration = 60000;
+const discordUserIDRegex = /<@![0-9]+>/g;
+const discordChannelIDRegex = /<#[0-9]+>/g;
 
 // Message and embed constants
 const checkDMsMessage = '***check your DMs.***';
@@ -32,9 +34,9 @@ const helpEmbed = new Discord.MessageEmbed()
     .setDescription('')
     .setColor(0xff0000)
     .addFields(
-        { name: '`/help` or `/?`', value: 'Sends a DM to caller with information about this bot\'s commands.' },
-        { name: '`/say [m/f] <text>` or `/s [m/f] <text>`', value: 'Speaks text in the voice channel the caller is in.'},
-        { name: '`/sayquote` or `/sq`', value: 'Randomly draw a quote from the most recent 100 messages in **#quotes**, then speaks it in the voice channel the caller is in.' },
+        { name: '`/help`\n`/?`', value: 'Sends a DM to caller with information about this bot\'s commands.' },
+        { name: '`/say [m/f] <text>`\n`/s [m/f] <text>`', value: 'Speaks text in the voice channel the caller is in.'},
+        { name: '`/sayquote [m/f]`\n`/sq [m/f]`', value: 'Selects a random quote from the 100 most recent messages in **#quotes**, then speaks it in the voice channel the caller is in.' },
         { name: '`/sbday <name>`', value: 'Sings "Happy Birthday" in the voice channel the caller is in.' }
     )
     .setFooter('Bot by Jaygantic#2171', 'https://avatars2.githubusercontent.com/u/42555186?s=460&v=4');
@@ -55,6 +57,27 @@ async function checkIfBotIsTalking(message) {
 }
 
 async function sayInVC(textToSay, gender, message) {
+
+    // Match tagged members and replace their IDs with their usernames
+    const matchedUserIDTags = [...textToSay.matchAll(discordUserIDRegex)];
+    for (matchedIDTag of matchedUserIDTags) {
+        const matchedIDTagString = matchedIDTag.toString();
+        const matchedID = matchedIDTagString.substring(3, matchedIDTagString.length - 1);
+        const matchedUser = await discordClient.users.fetch(matchedID);
+        if (matchedUser) 
+            textToSay = textToSay.replace(matchedIDTag, matchedUser.username);
+    }
+
+    // Match tagged channels and replace their IDs with their names
+    const matchedChannelIDTags = [...textToSay.matchAll(discordChannelIDRegex)];
+    for (matchedIDTag of matchedChannelIDTags) {
+        const matchedIDTagString = matchedIDTag.toString();
+        const matchedID = matchedIDTagString.substring(2, matchedIDTagString.length - 1);
+        const matchedChannel = await discordClient.channels.fetch(matchedID);
+        if (matchedChannel) 
+            textToSay = textToSay.replace(matchedIDTag, matchedChannel.name);
+    }
+
     let sayInVCPromise = new Promise(async function (myResolve, myReject) {
 
         try { 
@@ -113,16 +136,11 @@ async function sayInVC(textToSay, gender, message) {
 
         }          
         catch (err) {
-            if (err instanceof BotError) 
-                message.reply(err.message);
-            else
-                console.log(err);
-            myResolve();
+            myReject(err);
         }    
     });
 
     return sayInVCPromise;
-
 }
 
 async function singInVC(audioFilePath, message) {
@@ -159,11 +177,7 @@ async function singInVC(audioFilePath, message) {
 
         }          
         catch (err) {
-            if (err instanceof BotError) 
-                message.reply(err.message);
-            else
-                console.log(err);
-            myResolve();
+            myReject(err);
         }    
     });
 
@@ -250,113 +264,109 @@ discordClient.on('message', async message => {
     var trimmedContent = messageContent.substring(1, messageContent.length);
     var command = splitNextSpace(trimmedContent);
 
-    console.log(message.author.tag + ': ' + command);
+    try {
+        var reactionStatus = await message.react('💭');
+        
+        switch (command[0]) {
 
-    switch (command[0]) {
+            // Sends a DM to caller with information about this bot's commands.
+            // Syntax: /help or /?
+            case 'help': 
+            case '?':
 
-        // Sends a DM to caller with information about this bot's commands.
-        // Syntax: /help or /?
-        case 'help': 
-        case '?':
-
-            try {
                 var DMChannel = await message.author.createDM();
                 await DMChannel.send(helpEmbed);
                 await message.reply(checkDMsMessage);
-            }
-            catch (err) {
-                console.log(err)
-                message.reply(errorMessage);
-            }
-            break;
 
-        // Randomly draw a quote from the most recent 100 messages in #quotes, then speaks it in voice channel the caller is in.
-        // Syntax: /sayquote or /sq
-        case 'sayquote': 
-        case 'sq':
+                break;
+    
+            // Randomly draw a quote from the most recent 100 messages in #quotes, then speaks it in voice channel the caller is in.
+            // Syntax: /sayquote or /sq
+            case 'sayquote': 
+            case 'sq':
+    
+                // Check for gender arguments
+                var gender = 'NEUTRAL';
+                var textToSay = command[1];
+    
+                var splitContent = splitNextSpace(command[1]);
+                if (splitContent[0] == 'm') {
+                    gender = 'MALE';
+                }
+                else if (splitContent[0] == 'f') {
+                    gender = 'FEMALE';
+                }
 
-            // Get quotes channel
-            var quotesChannel = message.guild.channels.cache.find(ch => ch.name === 'quotes');
+                // Get quotes channel
+                var quotesChannel = message.guild.channels.cache.find(ch => ch.name === 'quotes');
+    
+                // Ignore if quotes channel DNE or is not text-based
+                if (!quotesChannel || !quotesChannel.isText())
+                    throw new BotError(noQuotesMessage);
+    
+                // Get quotes from channel
+                var quotes = await quotesChannel.messages.fetch({limit: 100});
+    
+                // Ignore if quotes channel is empty
+                if (quotes.size == 0)
+                    throw new BotError(noQuotesMessage);
 
-            // Ignore if quotes channel DNE or is not text-based
-            if (!quotesChannel || !quotesChannel.isText()) {
-                await message.reply(noQuotesMessage);
-                return;
-            }
+                var quotesKey = quotes.randomKey(1);
+                textToSay = quotes.get(quotesKey[0]).content;
+    
+                await sayInVC(textToSay, gender, message).catch(err => {throw err;});
+                break;
+    
+            // Speaks text in the voice channel the caller is in.
+            // Syntax: /say [m/f] <text> or /s [m/f] <text>
+            case 'say':
+            case 's':
+    
+                // Check for gender arguments
+                var gender = 'NEUTRAL';
+                var textToSay = command[1];
+    
+                var splitContent = splitNextSpace(command[1]);
+                if (splitContent[0] == 'm') {
+                    gender = 'MALE';
+                    textToSay = splitContent[1];
+                }
+                else if (splitContent[0] == 'f') {
+                    gender = 'FEMALE';
+                    textToSay = splitContent[1];
+                }
 
-            // Get quotes from channel
-            var quotes = await quotesChannel.messages.fetch({limit: 100});
+                await sayInVC(textToSay, gender, message).catch(err => {throw err;});
+                break;            
+    
+            // Sings "Happy Birthday" in the voice channel the caller is in.
+            // Syntax: /sbday <name>
+            case 'sbday':
+    
+                var gender = 'NEUTRAL';
+                var name = command[1];
+                if (name == "") throw new BotError(nothingToSayMessage);
 
-            // Ignore if quotes channel is empty
-            if (quotes.size == 0) {
-                await message.reply(noQuotesMessage);
-                return;
-            }
-            var quotesKey = quotes.randomKey(1);
-            textToSay = quotes.get(quotesKey[0]).content;
+                await singInVC('singInVCFiles/birthday_1.mp3', message); 
+                await sayInVC(name, gender, message); 
+                await singInVC('singInVCFiles/birthday_2.mp3', message); 
+                break;
 
-            await sayInVC(textToSay, 'NEUTRAL', message); 
-            break;
+        }
 
-        // Speaks text in the voice channel the caller is in.
-        // Syntax: /say [m/f] <text> or /s [m/f] <text>
-        case 'say':
-        case 's':
-
-            // Check for gender arguments
-            var gender = 'NEUTRAL';
-            var textToSay = command[1];
-
-            var splitContent = splitNextSpace(command[1]);
-            if (splitContent[0] == 'm') {
-                gender = 'MALE';
-                textToSay = splitContent[1];
-            }
-            else if (splitContent[0] == 'f') {
-                gender = 'FEMALE';
-                textToSay = splitContent[1];
-            }
-
-            await sayInVC(textToSay, gender, message); 
-            break;            
-
-        // Sings "Happy Birthday" in the voice channel the caller is in.
-        // Syntax: /sbday <name>
-        case 'sbday':
-
-            var gender = 'NEUTRAL';
-            var name = command[1];
-            await singInVC('singInVCFiles/birthday_1.mp3', message); 
-            await sayInVC(name, gender, message); 
-            await singInVC('singInVCFiles/birthday_2.mp3', message); 
-            break;
-
-        // Features in the works
-        case 'yt':
-            // if (message.member.voice && message.member.voice.channel) {
-            //     const callerVoiceChannel = message.member.voice.channel;
-
-            //     // Check if bot is in a voice channel
-            //     const botVoiceState = message.guild.voice;
-            //     if (message.guild.voice && message.guild.voice.channel) {
-                    
-            //         // Ignore if bot is currently talking
-            //         const botVCConnection = await message.guild.voice.channel.join();
-            //         if (botVCConnection && botVCConnection.dispatcher) {
-            //             message.reply(waitSpeakingMessage);
-            //             return; 
-            //         }   
-            //     }
-                
-            //     // Reset disconnect timer
-            //     clearTimeout(vcDisconnectTimer);
-
-            //     // Join caller's voice channel
-            //     const callerVCConnection = await callerVoiceChannel.join();
-            //     callerVCConnection.play(ytdl('https://www.youtube.com/watch?v=wDgQdr8ZkTw', { quality: 'highestaudio' , volume: 0.2}));
-            // }
-            break;
+        message.react('✅')
     }
+    catch (err) {
+        if (err instanceof BotError) {
+            message.reply(err.message);
+        }
+        else {
+            message.reply(errorMessage);
+            console.log(err)
+        }
+        message.react('❌')
+    }
+    reactionStatus.remove();
 
 });
 
