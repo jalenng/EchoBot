@@ -74,15 +74,12 @@ async function sayInVC(textToSay, gender, message) {
             if (isTalking) 
                 throw new BotError(replyMessages['waitSpeaking']);
 
-            // Check if there is text to say
-            if (textToSay == '') 
-                throw new BotError(replyMessages['nothingToSay']);
-
             // Reset disconnect timer
             clearTimeout(vcDisconnectTimer);
 
             // Join caller's voice channel
-            const callerVCConnection = await callerVoiceChannel.join();
+            const callerVCConnection = await callerVoiceChannel.join()
+                .catch(err => {throw new BotError(replyMessages['cannotJoin']);});
 
             // Export message to audio file
             let audioFilePath = VOICE_TEMP_FILE_PATH + '/' + message.id + '.mp3';
@@ -150,7 +147,8 @@ async function playFileInVC(audioFilePath, message) {
             clearTimeout(vcDisconnectTimer);
 
             // Join caller's voice channel
-            const callerVCConnection = await callerVoiceChannel.join();
+            const callerVCConnection = await callerVoiceChannel.join()
+                .catch(err => {throw new BotError(replyMessages['cannotJoin']);});
 
             // Play the audio file in the voice channel
             const dispatcher = callerVCConnection.play(audioFilePath);

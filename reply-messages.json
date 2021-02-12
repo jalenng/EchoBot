@@ -1,4 +1,5 @@
 {
+    "cannotJoin": "***I could not join the voice channel you are in. Please try another one.***",
     "checkDMs": "***check your DMs.***",
     "generalError": "***something went wrong. Please try again.*** ",
     "joinVC": "***please join a voice channel and try again.*** ",

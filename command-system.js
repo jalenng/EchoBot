@@ -38,16 +38,30 @@ function splitNextSpace(input) {
 }
 
 /**
+ * Sends a sequence of reactions to a message.
+ * @param {Discord.message} message - The Discord message to react to
+ * @param {string[]} emojis - The array of emojis/Twemojis to react with. A space is used to clear all reactions.
+ */
+async function reactSequence(message, emojis) {
+    for (emoji of emojis) {
+        if (emoji == " ")
+            await message.reactions.removeAll().catch(err => {});
+        else
+            await message.react(emoji).catch(err => {});
+    }
+}
+
+/**
  * Handles a bot command from a message
  * @param {Discord.message} message - The Discord message that invoked the command
  */
 async function commandHandler(message) {
     const messageContent = message.content;
     const trimmedContent = messageContent.substring(1, messageContent.length);  // Removes the command prefix
-    const command = splitNextSpace(trimmedContent);                             // command[0]: command; command[1]: arguments
+    const command = splitNextSpace(trimmedContent); // command[0]: command; command[1]: arguments
 
     try {
-        var reactionStatus = await message.react('💭');
+        var reactionStatus;
         
         switch (command[0]) {
 
@@ -55,21 +69,29 @@ async function commandHandler(message) {
             // Syntax: /help or /?
             case 'help': 
             case '?':
+                // React to indicate status
+                message.react('💭');
 
+                // Call async functions
                 var DMChannel = await message.author.createDM();
                 await DMChannel.send(helpEmbed);
                 await message.reply(replyMessages['checkDMs']);
+
+                // React to indicate success
+                message.reactions.removeAll().catch(err => {});
+                message.react('✅');
+
                 break;
     
             // Randomly draw a quote from the most recent 100 messages in #quotes, then speaks it in voice channel the caller is in.
             // Syntax: /sayquote or /sq
             case 'sayquote': 
             case 'sq':
-    
                 // Check for gender arguments
                 var gender = 'NEUTRAL';
                 var textToSay = command[1];
     
+                // If textToSay begins with m or f, pull it out.
                 var splitContent = splitNextSpace(command[1]);
                 if (splitContent[0] == 'm') {
                     gender = 'MALE';
@@ -95,18 +117,27 @@ async function commandHandler(message) {
                 var quotesKey = quotes.randomKey(1);
                 textToSay = quotes.get(quotesKey[0]).content;
     
-                await voiceFunctions.sayInVC(textToSay, gender, message).catch(err => {throw err;});
+                // React to indicate status
+                await message.react('🔊');
+                
+                await voiceFunctions.sayInVC(textToSay, gender, message)
+                    .catch(err => {throw err;});
+
+                // React to indicate success
+                message.reactions.removeAll().catch(err => {});
+                message.react('✅');
+
                 break;
     
             // Speaks text in the voice channel the caller is in.
             // Syntax: /say [m/f] <text> or /s [m/f] <text>
             case 'say':
             case 's':
-    
                 // Check for gender arguments
                 var gender = 'NEUTRAL';
                 var textToSay = command[1];
-    
+
+                // If textToSay begins with m or f, pull it out.
                 var splitContent = splitNextSpace(command[1]);
                 if (splitContent[0] == 'm') {
                     gender = 'MALE';
@@ -117,27 +148,54 @@ async function commandHandler(message) {
                     textToSay = splitContent[1];
                 }
 
-                await voiceFunctions.sayInVC(textToSay, gender, message).catch(err => {throw err;});
+                // Check if there is text to say
+                if (textToSay == '') 
+                    throw new BotError(replyMessages['nothingToSay']);
+
+                // React to indicate status
+                message.react('🔊');
+
+                // Call async function
+                await voiceFunctions.sayInVC(textToSay, gender, message)
+                    .catch(err => {throw err;});
+
+                // React to indicate success
+                message.reactions.removeAll().catch(err => {});
+                message.react('✅');
+
                 break;            
     
             // Sings "Happy Birthday" in the voice channel the caller is in.
             // Syntax: /sbday <name>
             case 'sbday':
-    
                 var gender = 'NEUTRAL';
                 var name = command[1];
+
+                // Check if there is text to say
                 if (name == "") throw new BotError(replyMessages['nothingToSay']);
 
+                // React to indicate status
+                message.react('🎵');
+
+                // Queue reaction sequence
+                reactSequence(message, ["🇭", "🇦", "🇵", "🅿", "🇾", " ", "🇧", "🇮", "🇷", "🇹", "🇭", "🇩", "🇦", "🇾", " ", "🇹", "🇴", " ", "🇾", "🇴", "🇺", " "]);           
+
+                // Call async functions
                 await voiceFunctions.playFileInVC('audio/birthday_1.mp3', message); 
                 await voiceFunctions.sayInVC(name, gender, message); 
                 await voiceFunctions.playFileInVC('audio/birthday_2.mp3', message); 
+                
+                // React to indicate success
+                message.reactions.removeAll().catch(err => {});
+                message.react('✅');
+
                 break;
 
         }
 
-        message.react('✅');
     }
     catch (err) {
+        // Handle exceptions
         if (err instanceof BotError) {
             message.reply(err.message);
         }
@@ -145,7 +203,8 @@ async function commandHandler(message) {
             message.reply(replyMessages['generalError']);
             console.log(err);
         }
+        // React to indicate failure
+        await message.reactions.removeAll().catch(err => {});
         message.react('❌');
-    }
-    reactionStatus.remove();
+    }  
 }
