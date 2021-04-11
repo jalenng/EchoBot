@@ -11,10 +11,22 @@ const helpEmbed = new Discord.MessageEmbed()
     .setDescription('')
     .setColor(0xff0000)
     .addFields(
-        { name: '`/help`\n`/?`', value: 'Sends a DM to caller with information about this bot\'s commands.' },
-        { name: '`/say [m/f] <text>`\n`/s [m/f] <text>`', value: 'Speaks text in the voice channel the caller is in.'},
-        { name: '`/sayquote [m/f]`\n`/sq [m/f]`', value: 'Selects a random quote from the 100 most recent messages in **#quotes**, then speaks it in the voice channel the caller is in.' },
-        { name: '`/sbday <name>`', value: 'Sings "Happy Birthday" in the voice channel the caller is in.' }
+        { 
+            name: '`-help`\n`-?`', 
+            value: 'Sends a DM to caller with information about this bot\'s commands.' 
+        },
+        { 
+            name: '`-say [m/f] <text>`\n`-s [m/f] <text>`', 
+            value: 'Speaks text in the voice channel the caller is in.'
+        },
+        { 
+            name: '`-sayquote [m/f]`\n`-sq [m/f]`', 
+            value: 'Selects a random quote from the 100 most recent messages in **#quotes**, then speaks it in the voice channel the caller is in.' 
+        },
+        {
+            name: '`-sbday <name>`', 
+            value: 'Sings "Happy Birthday" in the voice channel the caller is in.' 
+        }
     )
     .setFooter('Bot by Jaygantic#2171', 'https://avatars2.githubusercontent.com/u/42555186?s=460&v=4');
 

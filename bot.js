@@ -10,7 +10,7 @@ const commandSystem = require('./command-system.js');
 const activityUpdater = require('./activity-updater.js')
 
 // Other constants
-const COMMAND_PREFIX = '/';
+const COMMAND_PREFIX = '-';
 const UPDATE_ACTIVITY_INTERVAL = 60000;
 
 // Initialize our Discord client
@@ -50,4 +50,4 @@ discordClient.on('message', async message => {
 });
 
 // Log in to our Discord client
-discordClient.login(require(process.env.DISCORD_CREDENTIALS).token);
+discordClient.login(require(process.env.DISCORD_CREDENTIALS).token);0
