@@ -1,7 +1,6 @@
 {
     "activitiesList": [
         ["LISTENING", "your commands"],
-        ["LISTENING", "\"/help\""],
         ["WATCHING", "over this server"]
     ]
 }

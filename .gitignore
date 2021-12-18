@@ -1,7 +1,6 @@
 .env
 start.sh
 stop.sh
-greeting-messages.json
 
 temp/
 private/
