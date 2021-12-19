@@ -1,9 +1,9 @@
-const { commands, commandsDesc } = require('./command-registry.js')
+const { MessageEmbed } = require('discord.js')
+const { commands, deployCommands } = require('./command-registry.js')
 const { BotError } = require('../../bot/bot-error.js')
 
-module.exports = async interaction => {
-  // Deploy the commands to the guild
-  interaction.guild.commands.set(commandsDesc)
+async function interactionListener (interaction) {
+  deployCommands(interaction.guild)
 
   // Ensure the interaction is a command and from a guild
   if (!interaction.isCommand() || !interaction.guildId) { return }
@@ -16,6 +16,7 @@ module.exports = async interaction => {
   if (command === null) { return }
 
   // Try to execute the function
+  let response = null
   try {
     await interaction.deferReply()
 
@@ -29,26 +30,43 @@ module.exports = async interaction => {
     }
 
     // Execute the command and wait for a response
-    let response = await command.func(member, channel, args)
+    response = await command.func(member, channel, args)
 
-    if (!response || response.length <= 0) { response = '**Done!**' }	// General response
-
-    // Show the response
-    await interaction.followUp(`✅ ${response}`)
-  }
-
-  // Handle errors elegantly
-  catch (err) {
-    let errResponse = 'There was an error. Please try again later.' // General response
+    // General response
+    if (!response) {
+      response = new MessageEmbed({
+        title: 'Done!',
+        color: '#6ba14d'
+      })
+    }
+  } catch (error) {
+    let errorDescription = 'Please try again later.' // General response
 
     // If the error is a bot error, use the specific response
-    if (err instanceof BotError && err.message != null && err.message.length > 0) { errResponse	= err.message }
+    const canUseErrResponse = error instanceof BotError && error.message != null && error.message.length > 0
+    if (canUseErrResponse) { errorDescription = error.message }
 
-    // Show the response
-    interaction.followUp(`❌ **Error -** ${errResponse}`)
-      .catch(console.log)
+    response = new MessageEmbed({
+      title: 'Error',
+      color: '#DA2D43',
+      description: errorDescription
+    })
+  }
 
-    // Log this error if it is not a bot error
-    if (!(err instanceof BotError)) { console.log(err) }
+  // Follow up
+  await followUp(interaction, response)
+}
+
+async function followUp (interaction, response) {
+  try {
+    if (typeof response === 'string') {
+      await interaction.followUp(response)
+    } else if (response instanceof MessageEmbed) {
+      await interaction.followUp({ embeds: [response] })
+    }
+  } catch (err) { // If there was a problem following up, log it
+    console.log(err)
   }
 }
+
+module.exports.interactionListener = interactionListener

@@ -1,6 +1,8 @@
+const { MessageEmbed } = require('discord.js')
 const { registerCommand } = require('../../core/command-system')
 const { synthesizeSpeech } = require('../google-tts')
 const { drawRandom } = require('./quotes.js')
+const { convertTags } = require('../../core/tag-prettify')
 const { Track, enqueue, ensureVoiceChannel } = require('../../core/voice-system')
 
 /**
@@ -13,21 +15,37 @@ registerCommand({
     // Retrieve the quote
     const quote = await drawRandom(member.guild)
 
-    // Get the voice channel and resource
+    // Voice channel, resource, properties
+    const title = '💬 Quote'
+    const description = `Content: ${quote}`
+
     const voiceChannel = ensureVoiceChannel(member)
-    const resource = await synthesizeSpeech(quote)
+    const resource = await synthesizeSpeech(await convertTags(quote))
+    const properties = {
+      title: title,
+      description: description,
+      member: member
+    }
 
     // Create the track
     const track = new Track(
-      member,
       voiceChannel,
-      resource, {
-        title: quote
-      })
+      resource,
+      properties
+    )
 
     // Enqueue the track
     await enqueue(track)
 
-    return `**Added to queue -** ${quote}`
+    return new MessageEmbed({
+      title: 'Added to queue',
+      color: '#6ba14d',
+      fields: [
+        {
+          name: title,
+          value: description
+        }
+      ]
+    })
   }
 })

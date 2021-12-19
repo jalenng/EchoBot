@@ -5,6 +5,9 @@ const {
 } = require('@discordjs/voice')
 
 async function streamYouTubeAudio (url) {
+  // Validate URL
+  if (!ytdl.validateURL(url)) return null
+
   // Make a stream from the response
   const stream = await ytdl(
     url,

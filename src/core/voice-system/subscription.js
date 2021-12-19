@@ -1,14 +1,10 @@
 const {
   joinVoiceChannel,
   createAudioPlayer,
-  createAudioResource,
   entersState,
   AudioPlayerStatus,
-  StreamType,
   VoiceConnectionStatus
 } = require('@discordjs/voice')
-
-const { BotError } = require('../../bot/bot-error.js')
 
 class Subscription {
   /**
@@ -42,7 +38,7 @@ class Subscription {
 
     // Event handler for error
     this.audioPlayer.on('error', (err) => {
-      console.log('Error')
+      console.log(err)
       // Attempt to recover by playing the next track
       this.next()
     })

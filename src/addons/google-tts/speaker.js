@@ -4,7 +4,6 @@ const {
   StreamType
 } = require('@discordjs/voice')
 
-const { BotError } = require('../../bot/bot-error.js')
 const { ttsClient } = require('./client.js')
 
 /**

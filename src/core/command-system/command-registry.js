@@ -24,6 +24,15 @@ function registerCommand (cmdProps) {
   })
 };
 
+/**
+ * Deploy the commands to the guild
+ *
+ * @param {*} guild
+ */
+function deployCommands (guild) {
+  guild.commands.set(commandsDesc)
+}
+
 module.exports.commands = commands
-module.exports.commandsDesc = commandsDesc
 module.exports.registerCommand = registerCommand
+module.exports.deployCommands = deployCommands

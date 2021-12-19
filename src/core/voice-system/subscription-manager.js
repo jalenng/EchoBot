@@ -1,12 +1,3 @@
-const {
-  entersState,
-  StreamType,
-  AudioPlayerStatus,
-  VoiceConnectionStatus,
-  AudioPlayer,
-  AudioResource
-} = require('@discordjs/voice')
-
 const { BotError } = require('../../bot/bot-error.js')
 const { Subscription } = require('./subscription.js')
 
@@ -41,11 +32,8 @@ const getQueue = async (guild) => {
   // Try to get a guild subscription
   const subscription = ensureGuildSubscription(guild)
 
-  // Get the queue
-  const queue = subscription.queue
-
   // Return the queue
-  return queue.map(track => track.member).join(', ')
+  return subscription.queue
 }
 
 /**

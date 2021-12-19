@@ -1,5 +1,4 @@
 const fs = require('fs')
-const path = require('path')
 
 module.exports.Logger = class {
   constructor (logFilepath = null) {

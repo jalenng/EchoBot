@@ -1,5 +1,7 @@
+const { MessageEmbed } = require('discord.js')
 const { registerCommand } = require('../../core/command-system')
 const { Track, enqueue, ensureVoiceChannel } = require('../../core/voice-system')
+const { convertTags } = require('../../core/tag-prettify')
 const { synthesizeSpeech } = require('./speaker.js')
 
 /**
@@ -19,23 +21,38 @@ registerCommand({
   func: async (member, channel, args) => {
     const message = args.message
 
-    // Get the voice channel
-    const voiceChannel = ensureVoiceChannel(member)
+    // Voice channel, resource, properties
+    const title = '💬 Say'
+    const description = `Content: ${message}`
 
-    // Create a track
-    const resource = await synthesizeSpeech(message)
+    const voiceChannel = ensureVoiceChannel(member)
+    const resource = await synthesizeSpeech(await convertTags(message))
+    const properties = {
+      title: title,
+      description: description,
+      member: member
+    }
+
+    // Create the track
     const track = new Track(
-      member,
       voiceChannel,
       resource,
-      {
-        title: message
-      }
+      properties
     )
 
     // Enqueue the track
     await enqueue(track)
 
-    return `**Added to queue -** ${message}`
+    // Return the embed
+    return new MessageEmbed({
+      title: 'Added to queue',
+      color: '#6ba14d',
+      fields: [
+        {
+          name: title,
+          value: description
+        }
+      ]
+    })
   }
 })

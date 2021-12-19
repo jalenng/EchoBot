@@ -1,3 +1,5 @@
+const { BotError } = require('../../bot/bot-error.js')
+
 /**
  * Draw a random quote from a guild's quotes channel
  *
@@ -15,7 +17,7 @@ async function drawRandom (guild) {
   const quotes = await channel.messages.fetch({ limit: 100 })
 
   // Ignore if quotes channel is empty
-  if (quotes.size == 0) { throw new BotError('There are no quotes in #quotes.') }
+  if (quotes.size === 0) { throw new BotError('There are no quotes in #quotes.') }
 
   const quotesKey = quotes.randomKey(1)
   const quote = quotes.get(quotesKey[0]).content

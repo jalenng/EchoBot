@@ -1,5 +1,6 @@
+const { MessageEmbed } = require('discord.js')
 const { registerCommand } = require('../command-system')
-const { getQueue, enqueue, next } = require('./subscription-manager')
+const { getQueue, next } = require('./subscription-manager')
 
 /**
  * Next
@@ -19,6 +20,23 @@ registerCommand({
   keyword: 'queue',
   description: 'Shows the voice queue of the guild',
   func: async (member, channel, args) => {
-    return await getQueue(member.guild)
+    const queue = await getQueue(member.guild)
+    console.log(queue)
+
+    const fields = queue.map((track, index) => {
+      const props = track.props
+      return {
+        name: `[${index + 1}] \n${props.title}`,
+        value: `*${props.description} \nAdded by ${props.member.displayName}*`
+      }
+    })
+
+    console.log(fields)
+
+    return new MessageEmbed({
+      title: 'Queue',
+      color: '#6ba14d',
+      fields: fields
+    })
   }
 })

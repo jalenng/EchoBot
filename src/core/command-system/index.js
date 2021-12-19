@@ -1,10 +1,14 @@
 const { botClient } = require('../../bot')
-const { BotError } = require('../../bot/bot-error.js')
 
-module.exports.registerCommand = require('./command-registry.js').registerCommand
+const { registerCommand, deployCommands } = require('./command-registry.js')
+const { interactionListener } = require('./interaction-listener.js')
 
 // Register the commands
 require('./commands.js')
 
 // Set up event listeners
-botClient.on('interactionCreate', require('./interaction-listener.js'))
+botClient.on('interactionCreate', interactionListener)
+botClient.on('guildCreate', deployCommands)
+
+// Exports
+module.exports.registerCommand = registerCommand
