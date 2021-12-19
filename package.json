@@ -1,10 +1,11 @@
 {
-    "name": "jerryecho",
+    "name": "echobot",
     "version": "1.0.0",
     "description": "testing",
     "main": "src/bot.js",
-    "author": "Jaygantic#2171",
+    "author": "jalenng",
     "dependencies": {
+        "@discordjs/opus": "^0.5.3",
         "@discordjs/voice": "^0.7.5",
         "@google-cloud/text-to-speech": "^3.4.0",
         "discord.js": "^13.3.1",
@@ -13,7 +14,7 @@
         "node-persist": "^3.1.0",
         "nodemon": "^2.0.7",
         "npm": "^8.3.0",
-        "opusscript": "^0.0.8",
+        "sodium": "^3.0.2",
         "ytdl": "^1.4.1",
         "ytdl-core": "^4.9.2"
     }

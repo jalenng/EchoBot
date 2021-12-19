@@ -1,4 +1,6 @@
 const { registerCommand } = require('../command-system');
+const { streamYouTubeAudio } = require('./downloader');
+const { Track, enqueue, ensureVoiceChannel } = require('../voice-system');
 
 /**
  * YouTube playback
@@ -14,7 +16,25 @@ registerCommand({
             required: true,
         }
     ],
-    func: async (message, args) => {
-        return 'in the works...';
+    func: async (member, channel, args) => {        
+        // Get the voice channel
+        let voiceChannel = ensureVoiceChannel(member);
+
+        // Create a track
+        let message = args.message;
+        let resource = await streamYouTubeAudio(args.url);
+        let track = new Track(
+            member,
+            voiceChannel, 
+            resource, 
+            {
+                title: message
+            }
+        );
+
+        // Enqueue the track
+        await enqueue(track);
+
+        return `**Added to queue -** ${args.url}`;
     }
 });

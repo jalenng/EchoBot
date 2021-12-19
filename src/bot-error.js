@@ -3,9 +3,8 @@ module.exports = class extends Error {
      * Initializes a BotError exception
      * @param {String} message - The error message to output
      */
-    constructor(message = "Error!") {
+    constructor(message) {
         super();
-        this.name = "BotError";
         this.message = message;
     }
 }

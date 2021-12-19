@@ -1,3 +1,4 @@
+const BotError = require('../bot-error.js');
 const { registerCommand } = require('./command-registry.js');
 
 /**
@@ -7,7 +8,7 @@ registerCommand({
     keyword: 'help', 
     description: 'Sends a help message',
     func: async (member, channel, args) => {
-        return 'in the works...';
+        throw new BotError("This feature has not been implemented yet.");
     }
 });
 
@@ -26,9 +27,7 @@ registerCommand({
         }
     ],
     func: async (member, channel, args) => {
-        let text = args.message;
-        if (text.length > 0)
-            return text;    // Repeat the argument
-        return 
+        let text = args.message;        
+        return text;
     }
 });

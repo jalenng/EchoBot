@@ -1,4 +1,4 @@
-const BotError = require('../bot-error');
+const BotError = require('../bot-error.js');
 
 module.exports.messageListener = require('./message-listener.js')
 module.exports.interactionListener = require('./interaction-listener.js')

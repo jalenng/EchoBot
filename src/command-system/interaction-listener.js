@@ -14,8 +14,7 @@ module.exports = async interaction => {
 
 	// Try to get the command
 	let command = commands[keyword];
-
-	if (command == null)
+	if (command === null)
 		return;
 
 	// Try to execute the function
@@ -31,18 +30,30 @@ module.exports = async interaction => {
 			args[option.name] = option.value;
 		}
 
+		// Execute the command and wait for a response
 		let response = await command.func(member, channel, args);
 
-		await interaction.followUp(response);
+		if (response === null || response.length <= 0)
+			response = "**Done!**";	// General response
+
+		// Show the response
+		await interaction.followUp(`✅ ${response}`);
 	}
 
 	// Handle errors elegantly
 	catch (err) {
-        if (err instanceof BotError) {
-			interaction.followUp(err.message).err(()=>{});
-        }
-        else {
-			interaction.followUp("Generic error.").err(()=>{});
-        }
+		let errResponse = "There was an error. Please try again later."; // General response
+
+		// If the error is a bot error, use the specific response
+		if (err instanceof BotError && err.message != null && err.message.length > 0)
+			errResponse	= err.message;
+
+		// Show the response
+		interaction.followUp(`❌ **Error -** ${errResponse}`)
+			.catch( console.log );
+
+		// Log this error if it is not a bot error
+		if (!(err instanceof BotError))
+			console.log(err);
 	}
 }

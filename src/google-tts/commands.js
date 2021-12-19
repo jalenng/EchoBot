@@ -1,10 +1,12 @@
 const { registerCommand } = require('../command-system');
+const { synthesizeSpeech } = require('./speaker.js');
+const { Track, enqueue, ensureVoiceChannel } = require('../voice-system');
 
 /**
  * Say
  */
 registerCommand({
-    keyword: 'say', 
+    keyword: 'say',
     description: 'Speaks a message in a voice channel',
     options: [
         {
@@ -14,18 +16,27 @@ registerCommand({
             required: true,
         }
     ],
-    func: async (message, args) => {
-        return 'in the works...';
-    }
-});
+    func: async (member, channel, args) => {
+        
+        let message = args.message;
+        
+        // Get the voice channel
+        let voiceChannel = ensureVoiceChannel(member);
 
-/**
- * Say quote
- */
-registerCommand({
-    keyword: 'sayquote', 
-    description: 'Speaks a random quote in a voice channel',
-    func: async (message, args) => {
-        return 'in the works...';
+        // Create a track
+        let resource = await synthesizeSpeech(message);
+        let track = new Track(
+            member, 
+            voiceChannel, 
+            resource, 
+            {
+                title: message
+            }
+        );
+
+        // Enqueue the track
+        await enqueue(track);
+
+        return `**Added to queue -** ${message}`;
     }
 });

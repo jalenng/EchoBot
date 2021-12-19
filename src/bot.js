@@ -11,6 +11,7 @@ const voiceSystem = require('./voice-system');
 // Add-ons
 require('./google-tts');
 require('./youtube-playback');
+require('./quoter');
 
 const DISCORD_TOKEN = require(process.env.DISCORD_CREDENTIALS).token;
 
