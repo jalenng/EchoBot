@@ -2,6 +2,12 @@ const { MessageEmbed } = require('discord.js')
 const { commands, deployCommands } = require('./command-registry.js')
 const { BotError } = require('../../bot/bot-error.js')
 
+/**
+ * Handles an incoming interaction.
+ * Checks if the interaction is a command, and if so, executes it.
+ *
+ * @param {Discord.Interaction} interaction - The interaction to handle
+ */
 async function interactionListener (interaction) {
   deployCommands(interaction.guild)
 
@@ -57,15 +63,23 @@ async function interactionListener (interaction) {
   await followUp(interaction, response)
 }
 
+/**
+ * Follow up after deferring the interaction's reply.
+ *
+ * @param {Discord.Interaction} interaction - The interaction to follow up
+ * @param {(string ||Discord.MessageEmbed)} response - The response to follow up with
+ */
 async function followUp (interaction, response) {
   try {
-    if (typeof response === 'string') {
-      await interaction.followUp(response)
-    } else if (response instanceof MessageEmbed) {
-      await interaction.followUp({ embeds: [response] })
+    let followUpContent = response.toString()
+    if (response instanceof MessageEmbed) {
+      followUpContent = { embeds: [response] }
+    } else if (typeof response === 'string') {
+      followUpContent = { embeds: [{ color: '#6ba14d', title: response }] }
     }
-  } catch (err) { // If there was a problem following up, log it
-    console.log(err)
+    await interaction.followUp(followUpContent)
+  } catch (error) { // If there was a problem following up, log it
+    console.log(error)
   }
 }
 

@@ -4,6 +4,12 @@ const {
   StreamType
 } = require('@discordjs/voice')
 
+/**
+ * Returns an AudioResource with a YouTube audo stream
+ *
+ * @param {string} url - The YouTube URL
+ * @returns {Discord.AudioResource} - The audio resource with the YouTube audio stream
+ */
 async function streamYouTubeAudio (url) {
   // Validate URL
   if (!ytdl.validateURL(url)) return null

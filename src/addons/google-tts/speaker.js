@@ -9,9 +9,9 @@ const { ttsClient } = require('./client.js')
 /**
  * Synthizes speech from a message and returns an audio resource
  *
- * @param {String} message The message to synthesize
- * @param {*} voiceOptions Voice options
- * @returns
+ * @param {string} message The message to synthesize
+ * @param {Object} voiceOptions Voice options
+ * @returns {Discord.AudioResource}
  */
 async function synthesizeSpeech (message, voiceOptions) {
   // Set up the request

@@ -3,10 +3,10 @@ const { BotError } = require('../../bot/bot-error.js')
 /**
  * Draw a random quote from a guild's quotes channel
  *
- * @param {*} guild
- * @returns
+ * @param {Discord.Guild} guild
+ * @returns {String}
  */
-async function drawRandom (guild) {
+async function drawRandomQuote (guild) {
   // Get quotes channel
   const channel = guild.channels.cache.find(ch => ch.name === 'quotes')
 
@@ -26,4 +26,4 @@ async function drawRandom (guild) {
 }
 
 // Exports
-module.exports.drawRandom = drawRandom
+module.exports.drawRandomQuote = drawRandomQuote

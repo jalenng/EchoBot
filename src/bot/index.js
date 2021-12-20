@@ -1,10 +1,7 @@
 const { Client, Intents } = require('discord.js')
-const { Logger } = require('../logger.js')
+const { log } = require('../core/logger')
 
 const DISCORD_TOKEN = require(process.env.DISCORD_CREDENTIALS).token
-
-// Set up logger
-const logger = new Logger('logs/test.log')
 
 // Initialize our Discord client
 const botClient = new Client({
@@ -26,8 +23,7 @@ const botClient = new Client({
 
 // Log to console when ready
 botClient.on('ready', () => {
-  logger.log(`Logged in as ${botClient.user.tag}!`)
-  logger.log('Ready.')
+  log(`Ready! Logged in as ${botClient.user.tag}!`)
 })
 
 // Log in to our Discord client

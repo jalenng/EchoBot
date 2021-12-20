@@ -21,21 +21,22 @@ registerCommand({
   description: 'Shows the voice queue of the guild',
   func: async (member, channel, args) => {
     const queue = await getQueue(member.guild)
-    console.log(queue)
 
+    // Get the embed fields for each track
     const fields = queue.map((track, index) => {
-      const props = track.props
-      return {
-        name: `[${index + 1}] \n${props.title}`,
-        value: `*${props.description} \nAdded by ${props.member.displayName}*`
-      }
+      const field = track.getEmbedField()
+
+      // Add the track's index in the queue to the field title
+      field.name = `[${index + 1}]\n${field.name}`
+      return field
     })
 
-    console.log(fields)
+    const description = queue.length === 0 ? 'The queue is empty.' : ''
 
     return new MessageEmbed({
       title: 'Queue',
       color: '#6ba14d',
+      description: description,
       fields: fields
     })
   }

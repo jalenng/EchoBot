@@ -20,38 +20,33 @@ registerCommand({
   ],
   func: async (member, channel, args) => {
     // Voice channel, resource, properties
-    const title = `▶️ ${args.url}`
-    const description = `URL: ${args.url}`
-
     const voiceChannel = ensureVoiceChannel(member)
     const resource = await streamYouTubeAudio(args.url)
     if (!resource) return
 
-    const properties = {
-      title: title,
-      description: description,
-      member: member
-    }
+    const title = `▶️ ${args.url}`
+    const properties = [
+      { name: 'Channel', value: args.url },
+      { name: 'URL', value: args.url }
+    ]
 
-    // Create a track
+    // Create the track
     const track = new Track(
       voiceChannel,
       resource,
+      title,
+      member,
       properties
     )
 
     // Enqueue the track
     await enqueue(track)
 
+    // Return the embed
     return new MessageEmbed({
       title: 'Added to queue',
       color: '#6ba14d',
-      fields: [
-        {
-          name: title,
-          value: description
-        }
-      ]
+      fields: [track.getEmbedField()]
     })
   }
 })
