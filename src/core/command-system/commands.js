@@ -1,5 +1,16 @@
-const { BotError } = require('../../bot/bot-error.js')
-const { registerCommand } = require('./command-registry.js')
+const { MessageEmbed } = require('discord.js')
+const { registerCommand, deployCommands, commandsDesc } = require('./command-registry.js')
+
+/**
+ * Deploy
+ */
+registerCommand({
+  keyword: 'deploy',
+  description: 'Deploys the commands',
+  func: async (member, channel, args) => {
+    return await deployCommands(member.guild)
+  }
+})
 
 /**
  * Help
@@ -8,7 +19,21 @@ registerCommand({
   keyword: 'help',
   description: 'Sends a help message',
   func: async (member, channel, args) => {
-    throw new BotError('This feature has not been implemented yet.')
+    // Create embed fields for each command
+    const fields = commandsDesc.map((command) => {
+      const description = command.description
+      return {
+        name: `\`/${command.name}\``,
+        value: description
+      }
+    })
+
+    return new MessageEmbed({
+      title: 'Help',
+      color: '#6ba14d',
+      // description: description,
+      fields: fields
+    })
   }
 })
 

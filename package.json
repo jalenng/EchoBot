@@ -1,8 +1,8 @@
 {
     "name": "echobot",
     "version": "1.0.0",
-    "description": "testing",
-    "main": "src/main.js",
+    "description": "I'm a text-to-speech and music bot!",
+    "main": "src/index.js",
     "author": "jalenng",
     "dependencies": {
         "@discordjs/opus": "^0.5.3",

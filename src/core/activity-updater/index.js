@@ -1,4 +1,5 @@
 const { botClient } = require('../../bot')
+const { log, LogType } = require('../logger')
 const activities = require('./activities.json').activitiesList
 
 // How long to wait between activity updates
@@ -12,7 +13,7 @@ function updateActivity () {
     const activity = getRandomActivity()
     botClient.user.setActivity(activity[1], { type: activity[0] })
   } catch (error) {
-    console.log(error)
+    log(`Error updating activity\n${error}\n${error.stack}`, LogType.Error)
   }
 }
 
@@ -28,10 +29,11 @@ function getRandomActivity () {
   }
 }
 
-// Update the activity every 10 seconds
 botClient.on('ready', () => {
+  // Set the status to online
   botClient.user.setStatus('online')
 
+  // Update the activity every 10 seconds
   updateActivity()
   setInterval(updateActivity, ACTIVITY_UPDATE_INTERVAL)
 })

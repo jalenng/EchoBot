@@ -23,7 +23,7 @@ const botClient = new Client({
 
 // Log to console when ready
 botClient.on('ready', () => {
-  log(`Ready! Logged in as ${botClient.user.tag}!`)
+  log(`${botClient.user.tag} is ready!`)
 })
 
 // Log in to our Discord client

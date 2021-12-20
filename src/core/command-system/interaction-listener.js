@@ -1,5 +1,6 @@
 const { MessageEmbed } = require('discord.js')
-const { commands, deployCommands } = require('./command-registry.js')
+const { log, LogType } = require('../logger')
+const { commands } = require('./command-registry.js')
 const { BotError } = require('../../bot/bot-error.js')
 
 /**
@@ -9,8 +10,6 @@ const { BotError } = require('../../bot/bot-error.js')
  * @param {Discord.Interaction} interaction - The interaction to handle
  */
 async function interactionListener (interaction) {
-  deployCommands(interaction.guild)
-
   // Ensure the interaction is a command and from a guild
   if (!interaction.isCommand() || !interaction.guildId) { return }
 
@@ -35,6 +34,12 @@ async function interactionListener (interaction) {
       args[option.name] = option.value
     }
 
+    log(`Handling command interaction ${interaction.id} 
+Command: ${keyword}
+Args: ${JSON.stringify(args)} 
+Guild: ${interaction.guildId} (${interaction.guild.name})
+User: ${interaction.user.id} (${interaction.user.tag})`)
+
     // Execute the command and wait for a response
     response = await command.func(member, channel, args)
 
@@ -45,6 +50,8 @@ async function interactionListener (interaction) {
         color: '#6ba14d'
       })
     }
+
+    log(`Finished handling interaction ${interaction.id}`)
   } catch (error) {
     let errorDescription = 'Please try again later.' // General response
 
@@ -57,6 +64,10 @@ async function interactionListener (interaction) {
       color: '#DA2D43',
       description: errorDescription
     })
+
+    if (!(error instanceof BotError)) {
+      log(`Failed to handle interaction ${interaction.id}\n${error}\n${error.stack}`, LogType.Error)
+    }
   }
 
   // Follow up
@@ -78,8 +89,10 @@ async function followUp (interaction, response) {
       followUpContent = { embeds: [{ color: '#6ba14d', title: response }] }
     }
     await interaction.followUp(followUpContent)
+
+    log(`Finished following up interaction ${interaction.id}`)
   } catch (error) { // If there was a problem following up, log it
-    console.log(error)
+    log(`Failed to follow up interaction ${interaction.id}\n${error}\n${error.stack}`, LogType.Error)
   }
 }
 

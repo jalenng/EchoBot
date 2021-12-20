@@ -66,10 +66,15 @@ function generateLogHeader (date, type) {
  * lines wrap at 80 characters.
  *
  * @param {string} header - The header that will appear on the left side of the message.
- * @param {*} message - The messsage to log. This will be converted to a string.
+ * @param {(string || object)} message - The messsage to log
  */
 function generateLogString (header, message) {
   if (!message) return ''
+
+  // Convert object to string
+  if (typeof message === 'object') {
+    message = JSON.stringify(message, null, 2)
+  }
 
   // Split message into lines
   const lines = message.toString().split('\n')

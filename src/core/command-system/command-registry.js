@@ -1,3 +1,5 @@
+const { log } = require('../logger')
+
 // Map wsed for parsing and executing commands
 const commands = new Map()
 
@@ -12,6 +14,8 @@ const commandsDesc = []
  */
 function registerCommand (cmdProps) {
   const keyword = cmdProps.keyword
+
+  log(`Registering command: ${keyword}...`)
 
   // Add to the commands map
   commands[keyword] = {
@@ -34,10 +38,17 @@ function registerCommand (cmdProps) {
  *
  * @param {Discord.Guild} guild - The guild to deploy the commands to
  */
-function deployCommands (guild) {
-  guild.commands.set(commandsDesc)
+async function deployCommands (guild) {
+  try {
+    await guild.commands.set(commandsDesc)
+    log(`Deployed commands to guild ${guild.id} (${guild.name})`)
+    return
+  } catch (error) {
+    throw new Error('Failed to deploy commands to guild')
+  }
 }
 
 module.exports.commands = commands
+module.exports.commandsDesc = commandsDesc
 module.exports.registerCommand = registerCommand
 module.exports.deployCommands = deployCommands
