@@ -34,7 +34,13 @@ class Track {
     descProps.push({ name: 'Added by', value: this.member })
 
     // Join the properties into a string
-    const description = descProps.map(prop => `*${prop.name}: ${prop.value}*`).join('\n')
+    let description = descProps.map(prop => `*${prop.name}: ${prop.value}*`).join('\n')
+
+    // Limit the length of the description to 150 characters. If the description is longer,
+    // add an ellipsis to the end.
+    if (description.length > 150) {
+      description = description.substring(0, 150) + '...'
+    }
 
     // Return the title and description as an embed field
     return {
