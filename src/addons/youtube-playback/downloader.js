@@ -1,4 +1,7 @@
 const ytdl = require('ytdl-core')
+const ytsr = require('ytsr')
+const { BotError } = require('../../bot/bot-error')
+
 const {
   createAudioResource,
   StreamType
@@ -32,5 +35,40 @@ async function streamYouTubeAudio (url) {
   })
 }
 
+/**
+ * Retrieves metadata from a YouTube URL
+ */
+async function getYouTubeMetadata (url) {
+  // Validate URL
+  if (!ytdl.validateURL(url)) return null
+
+  // Get metadata
+  const metadata = await ytdl.getInfo(url)
+
+  // Return metadata
+  return metadata
+}
+
+/**
+ * Processes an argument, which can be a YouTube URL or a search query.
+ * Returns the URL or the first result from a search query.
+ * @param {string} arg - The argument to process
+ */
+async function getURLFromArg (arg) {
+  const isValidUrl = ytdl.validateURL(arg)
+
+  // If the argument is not a valid url, try to search for it
+  if (isValidUrl) { return arg }
+
+  // Search for the argument
+  const searchResults = await ytsr(arg, { limit: 1 })
+  if (!searchResults || !searchResults.items || searchResults.items.length <= 0) {
+    throw new BotError(`No results found for the search query "${arg}"`)
+  }
+  return searchResults.items[0].url
+}
+
 // Exports
 module.exports.streamYouTubeAudio = streamYouTubeAudio
+module.exports.getYouTubeMetadata = getYouTubeMetadata
+module.exports.getURLFromArg = getURLFromArg

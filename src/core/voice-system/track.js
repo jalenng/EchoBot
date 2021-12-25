@@ -38,7 +38,7 @@ class Track {
 
     // Limit the length of the description to 150 characters. If the description is longer,
     // add an ellipsis to the end.
-    if (description.length > 150) {
+    if (description.length > 200) {
       description = description.substring(0, 150) + '...'
     }
 
