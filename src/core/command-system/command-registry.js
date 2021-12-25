@@ -1,4 +1,5 @@
 const { log } = require('../logger')
+const { BotError } = require('../../bot/bot-error.js')
 
 // Map wsed for parsing and executing commands
 const commands = new Map()
@@ -42,9 +43,9 @@ async function deployCommands (guild) {
   try {
     await guild.commands.set(commandsDesc)
     log(`Deployed commands to guild ${guild.id} (${guild.name})`)
-    return
   } catch (error) {
-    throw new Error('Failed to deploy commands to guild')
+    log(`Failed to deploy commands to guild ${guild.id} (${guild.name})\n${error}\n${error.stack}`)
+    throw new BotError('Failed to deploy commands. ')
   }
 }
 

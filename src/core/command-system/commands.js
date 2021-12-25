@@ -31,7 +31,7 @@ registerCommand({
     return new MessageEmbed({
       title: 'Help',
       color: '#6ba14d',
-      // description: description,
+      description: 'Here are the slash commands I can do!',
       fields: fields
     })
   }

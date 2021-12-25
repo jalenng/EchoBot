@@ -63,7 +63,7 @@ async function getURLFromArg (arg) {
   // Search for the argument
   const searchResults = await ytsr(arg, { limit: 1 })
   if (!searchResults || !searchResults.items || searchResults.items.length <= 0) {
-    throw new BotError(`No results found for the search query "${arg}"`)
+    throw new BotError(`I couldn't find a YouTube video for "${arg}".`)
   }
   return searchResults.items[0].url
 }

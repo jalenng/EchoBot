@@ -1,6 +1,9 @@
 const { botClient } = require('../../bot')
 
-const { registerCommand, deployCommands } = require('./command-registry.js')
+const {
+  registerCommand,
+  deployCommands
+} = require('./command-registry.js')
 const { interactionListener } = require('./interaction-listener.js')
 
 // Register the commands
@@ -8,8 +11,13 @@ require('./commands.js')
 
 // Set up event listeners
 botClient.on('interactionCreate', interactionListener)
-botClient.on('guildCreate', (guild) => { deployCommands(guild).catch() })
-// botClient.on('messageCreate', (message) => { deployCommands(message.guild).catch() })/
+botClient.on('guildCreate', async (guild) => {
+  try {
+    await deployCommands(guild)
+  } catch (error) {
+    // TODO: Handle error
+  }
+})
 
 // Exports
 module.exports.registerCommand = registerCommand

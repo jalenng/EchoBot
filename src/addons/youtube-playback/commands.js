@@ -22,7 +22,7 @@ registerCommand({
       required: true
     }
   ],
-  func: async (member, channel, args) => {    
+  func: async (member, channel, args) => {
     // Voice channel, resource, properties
     const voiceChannel = ensureVoiceChannel(member)
 

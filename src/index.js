@@ -7,6 +7,7 @@ require('./bot')
 require('./core/activity-updater')
 require('./core/command-system')
 require('./core/voice-system')
+require('./core/guild-greeter')
 
 // Add-ons
 require('./addons/google-tts')
