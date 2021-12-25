@@ -34,7 +34,9 @@ class Subscription {
     this.voiceConnection = null
     this.queue = []
 
+    this.currentVoiceChannel = null
     this.destroyConnectionTimeout = null
+    this.voiceConnectionDestroyed = true
 
     this.configureAudioPlayer()
   }
@@ -59,7 +61,7 @@ class Subscription {
     try {
       await entersState(this.audioPlayer, AudioPlayerStatus.Playing, PLAYER_STATE_CHANGE_TIMEOUT)
     } catch (error) {
-      this.voiceConnection.destroy()
+      this.destroyVoiceConnection()
       this.next()
     }
   }
@@ -69,18 +71,32 @@ class Subscription {
    * @param {Discord.VoiceChannel} voiceChannel - The voice channel to join and connect to
    */
   async connectToVoiceChannel (voiceChannel) {
+
     this.clearDisconnectTimeout()
-    this.voiceConnection = joinVoiceChannel({
+
+    // If the voice connection is already connected to the voice channel, do nothing
+    if (this.currentVoiceChannel === voiceChannel) return;
+
+    // Join the voice channel
+    const joinConfig = {
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator
-    })
+    }
+    if (this.voiceConnectionDestroyed) {
+      this.voiceConnection = joinVoiceChannel(joinConfig)
+    } else {
+      this.voiceConnection.rejoin(joinConfig)
+    }
+
+    this.currentVoiceChannel = voiceChannel
+    this.voiceConnectionDestroyed = false
 
     // Wait for the voice connection to be ready
     try {
       await entersState(this.voiceConnection, VoiceConnectionStatus.Ready, CONNECTION_TIMEOUT)
     } catch (error) {
-      this.voiceConnection.destroy()
+      this.destroyVoiceConnection()
       this.next()
     }
 
@@ -174,7 +190,9 @@ class Subscription {
    * Destroys the voice connection safely
    */
   async destroyVoiceConnection () {
-    if (this.voiceConnection) {
+    if (!this.voiceConnectionDestroyed) {
+      this.voiceConnectionDestroyed = true
+      this.currentVoiceChannel = null
       this.voiceConnection.destroy()
       await entersState(this.voiceConnection, VoiceConnectionStatus.Destroyed, CONNECTION_TIMEOUT)
     }
