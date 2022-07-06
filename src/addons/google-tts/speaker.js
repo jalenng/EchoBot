@@ -14,6 +14,16 @@ const { ttsClient } = require('./client.js')
  * @returns {Discord.AudioResource}
  */
 async function synthesizeSpeech (message, voiceOptions) {
+  const options = {
+    // Defaults
+    gender: 'MALE',
+    pitch: 0.0,
+    speakingRate: 1.0,
+
+    // Overrides
+    ...voiceOptions
+  }
+
   // Set up the request
   const request = {
     input: {
@@ -21,12 +31,12 @@ async function synthesizeSpeech (message, voiceOptions) {
     },
     voice: {
       languageCode: 'en-US',
-      ssmlGender: 'm'
-      // ...voiceOptions
+      ssmlGender: options.gender
     },
     audioConfig: {
       audioEncoding: 'MP3',
-      speakingRate: 1.0
+      pitch: options.pitch,
+      speakingRate: options.speed
     }
   }
 

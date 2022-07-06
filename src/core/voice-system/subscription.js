@@ -71,11 +71,10 @@ class Subscription {
    * @param {Discord.VoiceChannel} voiceChannel - The voice channel to join and connect to
    */
   async connectToVoiceChannel (voiceChannel) {
-
     this.clearDisconnectTimeout()
 
     // If the voice connection is already connected to the voice channel, do nothing
-    if (this.currentVoiceChannel === voiceChannel) return;
+    if (this.currentVoiceChannel === voiceChannel) return
 
     // Join the voice channel
     const joinConfig = {
