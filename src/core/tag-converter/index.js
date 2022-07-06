@@ -1,41 +1,10 @@
 const { botClient } = require('../../bot')
 
-const DISCORD_USER_TAG_REGEX = /<@![0-9]+>/g
-const DISCORD_CHANNEL_TAG_REGEX = /<#[0-9]+>/g
+const DISCORD_TAG_REGEX = /<(?:[^\d>]+|:[A-Za-z0-9]+:)\w+>/g
 
-/**
- * Matches tagged members and replace their IDs with their usernames
- *
- * @param {string} input - The string to convert
-  * @returns {string} - The converted string
-  */
-async function convertDiscordMemberTags (input) {
-  const matchedUserIDTags = [...input.matchAll(DISCORD_USER_TAG_REGEX)]
-  for (const matchedIDTag of matchedUserIDTags) {
-    const matchedIDTagString = matchedIDTag.toString()
-    const matchedID = matchedIDTagString.substring(3, matchedIDTagString.length - 1)
-    const matchedUser = await botClient.users.fetch(matchedID).catch(console.log)
-    if (matchedUser) { input = input.replace(matchedIDTag, matchedUser.username) }
-  }
-  return input
-}
-
-/**
- * Matches tagged channels in a string and replaces their IDs with their names.
- *
- * @param {string} input - The string to convert
- * @returns {string} - The converted string
- */
-async function convertDiscordChannelTags (input) {
-  const matchedChannelIDTags = [...input.matchAll(DISCORD_CHANNEL_TAG_REGEX)]
-  for (const matchedIDTag of matchedChannelIDTags) {
-    const matchedIDTagString = matchedIDTag.toString()
-    const matchedID = matchedIDTagString.substring(2, matchedIDTagString.length - 1)
-    const matchedChannel = await botClient.channels.fetch(matchedID)
-    if (matchedChannel) { input = input.replace(matchedIDTag, matchedChannel.name) }
-  }
-  return input
-}
+const DISCORD_USER_TAG_REGEX = /<@!?(?<id>([0-9]+))>/g
+const DISCORD_CHANNEL_TAG_REGEX = /<#(?<id>([0-9]+))>/g
+const DISCORD_EMOJI_TAG_REGEX = /<a?:(?<name>[^:]+):(?<id>([0-9]+))>/g
 
 /**
  * Matches tagged members and channels in a string
@@ -45,11 +14,43 @@ async function convertDiscordChannelTags (input) {
  * @returns {string} - The converted string
  */
 async function convertTags (input) {
-  input = await convertDiscordMemberTags(input)
-  input = await convertDiscordChannelTags(input)
+  const matchedTags = [...input.matchAll(DISCORD_TAG_REGEX)]
+
+  for (const tag of matchedTags) {
+    // Attempt to match for user tag.
+    // If so, swap tag with username.
+    const userMatch = [...tag.toString().matchAll(DISCORD_USER_TAG_REGEX)][0]
+    const userID = userMatch?.groups?.id
+
+    if (userID) {
+      const user = await botClient.users.fetch(userID).catch(console.log)
+      input = input.replace(tag, user.username)
+      continue
+    }
+
+    // Attempt to match for channel tag.
+    // If so, swap tag with channel name.
+    const channelMatch = [...tag.toString().matchAll(DISCORD_CHANNEL_TAG_REGEX)][0]
+    const channelID = channelMatch?.groups?.id
+
+    if (channelID) {
+      const channel = await botClient.channels.fetch(channelID)
+      input = input.replace(tag, channel.name)
+      continue
+    }
+
+    // Attempt to match for emoji tag.
+    // If so, swap tag with emoji name.
+    const emojiMatch = [...tag.toString().matchAll(DISCORD_EMOJI_TAG_REGEX)][0]
+    const emojiName = emojiMatch?.groups?.name
+
+    if (emojiName) {
+      input = input.replace(tag, emojiName)
+      continue
+    }
+  }
+
   return input
 }
 
-module.exports.convertDiscordUserTags = convertDiscordMemberTags
-module.exports.convertDiscordChannelTags = convertDiscordChannelTags
 module.exports.convertTags = convertTags

@@ -31,7 +31,7 @@ registerCommand({
       return field
     })
 
-    const description = queue.length === 0 ? 'The queue is empty.' : ''
+    const description = queue.length === 0 ? 'The queue is empty' : ''
 
     return new MessageEmbed({
       title: 'Queue',
