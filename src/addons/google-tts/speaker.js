@@ -16,6 +16,7 @@ const { ttsClient } = require('./client.js')
 async function synthesizeSpeech (message, voiceOptions) {
   const options = {
     // Defaults
+    language: 'en-US',
     gender: 'MALE',
     pitch: 0.0,
     speakingRate: 1.0,
@@ -30,7 +31,7 @@ async function synthesizeSpeech (message, voiceOptions) {
       text: message
     },
     voice: {
-      languageCode: 'en-US',
+      languageCode: options.language,
       ssmlGender: options.gender
     },
     audioConfig: {
